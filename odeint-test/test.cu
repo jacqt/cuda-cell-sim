@@ -8,32 +8,31 @@
 using namespace std;
 using namespace boost::numeric::odeint;
 
-// state_type = double
+// state_type = vector<double>
 typedef thrust::device_vector<double> state_type;
 typedef runge_kutta_dopri5< state_type > stepper_type;
 
-/* we solve the simple ODE x' = 3/(2t^2) + x/(2t)
- * with initial condition x(1) = 0.
- * Analytic solution is x(t) = sqrt(t) - 1/t
- */
-
-void rhs(state_type xs, state_type &dxdt , const double t )
-{
-  dxdt[0] = 3.0/(2.0*t*t) + xs[0]/(2.0*t);
-  //dxdt[0] = t;
+void rhs_circle(state_type xs, state_type &dxdt , const double t) {
+  //dxdt[0] = 3.0/(2.0*t*t) + xs[0]/(2.0*t);
+  dxdt[0] =  xs[1];
+  dxdt[1] = -xs[0];
 }
 
-void write_cout( state_type x , const double t )
-{
-  cout << t << '\t' << x[0] << endl;
+void write_cout(state_type xs , const double t) {
+  cout << t << '\t';
+  for (state_type::iterator iter = xs.begin(); iter != xs.end(); ++iter) {
+    cout << *iter << '\t';
+  }
+  cout << endl;
 }
 
 
 int main()
 {
-  state_type x (1);
-  thrust::fill(x.begin(), x.begin() + 1, 0.0);
+  state_type xs(2);
+  thrust::fill(xs.begin(), xs.begin() + 1, 0.0);
+  thrust::fill(xs.begin() + 1, xs.begin() + 2, 1.0);
 
-  integrate_adaptive( make_controlled( 1E-12 , 1E-12 , stepper_type() ) ,
-      rhs , x , 1.0 , 100.0, 0.1 , write_cout );
+  integrate_adaptive(make_controlled(1E-12 , 1E-12 , stepper_type()),
+                     rhs_circle , xs , 1.0 , 100.0, 0.1 , write_cout);
 }
