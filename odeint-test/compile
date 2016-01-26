@@ -1,0 +1,1 @@
+nvcc -o test test.cu -I /home/ug13ag2/odeint/include/
