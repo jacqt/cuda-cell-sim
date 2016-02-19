@@ -51,11 +51,11 @@ float get_euler_error(double timestep) {
   xs[1] = 0.0;
   float error = 0.0;
   output_observer observer = output_observer(&error);
-  integrate_const(euler< state_type >(),
-                  rhs_circle,
-                  xs, 1.0, 20.0, timestep,
-                  observer);
-  return sqrt(error);
+  float steps = integrate_const(euler< state_type >(),
+                                rhs_circle,
+                                xs, 1.0, 20.0, timestep,
+                                observer);
+  return sqrt(error / steps);
 }
 
 // Runs the runge_katta4 ode solver
@@ -65,11 +65,11 @@ float get_const_error(double timestep) {
   xs[1] = 0.0;
   float error = 0.0;
   output_observer observer = output_observer(&error);
-  integrate_const(runge_kutta4< state_type >(),
-                  rhs_circle,
-                  xs, 1.0, 20.0, timestep,
-                  observer);
-  return sqrt(error);
+  float steps = integrate_const(runge_kutta4< state_type >(),
+                                rhs_circle,
+                                xs, 1.0, 20.0, timestep,
+                                observer);
+  return sqrt(error / steps);
 }
 
 // Runs the runge_kutta_dopri5 ode solver
@@ -79,16 +79,16 @@ float get_adaptive_error(double timestep) {
   xs[1] = 0.0;
   float error = 0.0;
   output_observer observer = output_observer(&error);
-  integrate_adaptive(make_controlled(1E-12, 1E-12, runge_kutta_dopri5< state_type >()),
-                     rhs_circle,
-                     xs, 1.0, 20.0, timestep,
-                     observer);
-  return sqrt(error);
+  float steps = integrate_adaptive(make_controlled(1E-12, 1E-12, runge_kutta_dopri5< state_type >()),
+                                   rhs_circle,
+                                   xs, 1.0, 20.0, timestep,
+                                   observer);
+  return sqrt(error / steps);
 }
 
 // Runs the ode solver over a set of trials
 void run_trials() {
-  for (double timestep = 0.0001; timestep < 1; timestep *= sqrt(10)) {
+  for (double timestep = 0.001; timestep < 10; timestep *= sqrt(sqrt(10))) {
     float euler_error  =  get_euler_error(timestep);
     float adaptive_error =  get_adaptive_error(timestep);
     float const_error = get_const_error(timestep);
